@@ -1,9 +1,15 @@
+#include <Qt>
+
 #include "pn532_extend_cmd.h"
 #include <nfc/nfc.h>
 #include <stdio.h>
 #include <unistd.h>
-#include <termios.h>
 
+#ifdef Q_OS_WIN32
+#include <windows.h>
+#else
+#include <termios.h>
+#endif
 
 struct nfc_device_dual {
   const nfc_context *context;
@@ -30,12 +36,21 @@ struct nfc_device_dual {
   int     last_error;
 };
 
-struct serial_port_unix {
-  int 			fd; 			// Serial port file descriptor
-  struct termios 	termios_backup; 	// Terminal info before using the port
-  struct termios 	termios_new; 		// Terminal info during the transaction
+#ifdef Q_OS_WIN32
+struct serial_port_windows {
+  HANDLE  hPort;                // Serial port handle
+  DCB     dcb;                  // Device control settings
+  COMMTIMEOUTS ct;              // Serial port time-out configuration
 };
-#define UART_DATA( X ) ((struct serial_port_unix *) (X))
+#define UART_DATA( X ) ((struct serial_port_windows *) (X))
+#else
+ struct serial_port_unix {
+   int 			fd; 			// Serial port file descriptor
+   struct termios 	termios_backup; 	// Terminal info before using the port
+   struct termios 	termios_new; 		// Terminal info during the transaction
+ };
+ #define UART_DATA( X ) ((struct serial_port_unix *) (X))
+#endif /** Q_OS_WIN32 */
 
 typedef void *serial_port;
 // Internal data structs
@@ -81,13 +96,23 @@ int pn532_extend_cmd::sendCommand(nfc_device *pnd, uint8_t *buf, uint8_t len)
     frame[len+6] = ~sum+1;
     frame[len+7] = 0;
 
-    int res = write( (UART_DATA((DRIVER_DATA(((nfc_device_dual *)pnd))->port)))->fd, frame, len+8);
+#ifdef WIN32
+    DWORD   dwTxLen = 0;
+    int res = WriteFile((UART_DATA((DRIVER_DATA(((nfc_device_dual *)pnd))->port)))->hPort, frame, len+8, &dwTxLen, NULL);
+#else
+     int res = write( (UART_DATA((DRIVER_DATA(((nfc_device_dual *)pnd))->port)))->fd, frame, len+8);
+#endif
 
     delete [] frame;
 
     if(res != len+8){
         return -1;
     }
+
+#ifdef WIN32
+    if (!dwTxLen)
+        return -1;
+#endif
 
     return 0;
 }

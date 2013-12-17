@@ -12,25 +12,26 @@
 #include "nfc/nfc.h"
 #include "nfc/nfc-emulation.h"
 
+#include "freefare.h"
+
+#if Q_OS_LINUX
 #include "nfc/mac.h"
 #include "nfc/llcp.h"
 #include "nfc/llc_link.h"
 #include "nfc/llc_service.h"
 #include "nfc/llc_connection.h"
 
-#include "freefare.h"
-
 #include "ndef/libndef_global.h"
 #include "ndef/ndefmessage.h"
 #include "ndef/ndefrecord.h"
 #include "ndef/ndefrecordtype.h"
 #include "ndef/tlv.h"
+#endif /** Q_OS_LINUX */
 
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "pn532_extend_cmd.h"
 #include "mf1ics50writeblock.h"
-#include "snepClient.h"
 
 void sleep(unsigned int msec)
 {
@@ -41,7 +42,11 @@ void sleep(unsigned int msec)
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
+#ifdef Q_OS_WIN32
+    ui(new Ui::MainWindow)
+#else /** Q_OS_WIN32 */
     ui(new Ui::MainWindow), snepClient(new snepClientThread), snepServer(new snepServerThread)
+#endif /** Q_OS_WIN32 */
 {
     ui->setupUi(this);
     wbDialog = new mf1ics50WriteBlock(this);
@@ -60,8 +65,12 @@ MainWindow::~MainWindow()
     context = NULL;
 
     delete wbDialog;
+
+#ifdef Q_OS_LINUX
     delete snepClient;
     delete snepServer;
+#endif
+
     delete ui;
 }
 
@@ -86,10 +95,18 @@ QByteArray MainWindow :: hexStr2ByteArr(QString &hexStr)
 void MainWindow::refresh()
 {
     ui->comboBoxSerialDevice->clear();
+#ifdef Q_OS_WIN32
+    foreach (const QSerialPortInfo &info, QSerialPortInfo::availablePorts()) {
+        qDebug() << "Name        : " << info.portName();
+        qDebug() << "Description : " << info.description();
+        qDebug() << "Manufacturer: " << info.manufacturer();
+        ui->comboBoxSerialDevice->addItem(info.portName());
+    }
 
+#else
     QDir serialDir("/dev/serial/by-id");
     QFileInfoList serialFileList = serialDir.entryInfoList(QDir::Readable | QDir::Writable | \
-                                                        QDir::NoDotAndDotDot | QDir::Files);
+                                                           QDir::NoDotAndDotDot | QDir::Files);
 
     for(int i=0; i<serialFileList.size(); i++){
         qDebug() << serialFileList.at(i).readLink();
@@ -99,6 +116,7 @@ void MainWindow::refresh()
             ui->comboBoxSerialDevice->addItem(serialFileList.at(i).symLinkTarget());
         }
     }
+#endif
 }
 
 void MainWindow::beep(void)
@@ -203,12 +221,14 @@ void MainWindow::init(void)
 
     passwdInit();
 
+#ifdef Q_OS_LINUX
     /** NDEF */
     connect(ui->ndefPush, SIGNAL(clicked()), this, SLOT(ndefPush()));
     connect(snepClient, SIGNAL(finished()), this, SLOT(ndefPushed()));
     connect(ui->ndefPull, SIGNAL(clicked()), this, SLOT(ndefPull()));
     connect(snepServer, SIGNAL(finished()), this, SLOT(ndefPulled()));
     connect(snepServer, SIGNAL(sendNdefMessage(QString)), this, SLOT(ndefTextPulled(QString)));
+#endif
 }
 
 
@@ -311,6 +331,7 @@ void MainWindow :: test()
     qDebug() << "Index: " << ui->sectorComboBox->currentIndex();
 }
 
+#ifdef Q_OS_LINUX
 void MainWindow :: ndefPush(void)
 {
     ui->ndefPush->setEnabled(false);
@@ -354,6 +375,7 @@ void MainWindow :: ndefTextPulled(QString str)
     }
     ui->pullText->setText(str);
 }
+#endif /** Q_OS_LINUX */
 
 void MainWindow :: sysLog(QString str)
 {

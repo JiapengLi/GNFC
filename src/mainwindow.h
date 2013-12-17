@@ -6,8 +6,11 @@
 #include <nfc/nfc.h>
 #include "pn532_extend_cmd.h"
 #include "mf1ics50writeblock.h"
+
+#ifdef Q_OS_LINUX
 #include "snepClient.h"
 #include "snepServer.h"
+#endif
 
 namespace Ui {
 class MainWindow;
@@ -49,12 +52,14 @@ private slots:
     /** clear all data  */
     void resetBlock();
 
+#ifdef Q_OS_LINUX
     /** ndef */
     void ndefPush(void);
     void ndefPushed(void);
     void ndefPull(void);
     void ndefPulled(void);
     void ndefTextPulled(QString str);
+#endif
 
 protected:
     void resizeEvent ( QResizeEvent * event );
@@ -91,8 +96,10 @@ private:
 
     int outputSeperatorLength;
 
+#ifdef Q_OS_LINUX
     snepClientThread *snepClient;
     snepServerThread *snepServer;
+#endif
 
 };
 
