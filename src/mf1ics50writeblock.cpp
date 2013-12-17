@@ -161,7 +161,7 @@ void mf1ics50WriteBlock :: blockCheck()
 bool mf1ics50WriteBlock :: isKeyValid()
 {
     /** Check key length */
-    int keyLen;
+    int keyLen = 0;
     if(ui->radioButtonKeyA->isChecked()){
         keyLen = ui->lineEditKeyA->text().size();
     }else if(ui->radioButtonKeyB->isChecked()){

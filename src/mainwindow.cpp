@@ -50,6 +50,7 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
     wbDialog = new mf1ics50WriteBlock(this);
+    this->setWindowTitle("GNFC");
     init();
 }
 
@@ -74,6 +75,12 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+void MainWindow :: about(void)
+{
+    QMessageBox::about (this, "About", "GNFC " GNFC_VERSION "\nUsing Qt "\
+                        QT_VERSION_STR "\nwww.elechouse.com          ");
+}
+
 QByteArray MainWindow :: hexStr2ByteArr(QString &hexStr)
 {
     QByteArray byteArr;
@@ -94,12 +101,22 @@ QByteArray MainWindow :: hexStr2ByteArr(QString &hexStr)
 
 void MainWindow::refresh()
 {
+    /** clear serial device list */
     ui->comboBoxSerialDevice->clear();
+
 #ifdef Q_OS_WIN32
+    int cnt = QSerialPortInfo::availablePorts().size();
+    if(cnt <= 0){
+        sysLog("No serial port is available.");
+        return;
+    }
+    sysLog(QString("Find %1 Serial Port(s):").arg(cnt));
     foreach (const QSerialPortInfo &info, QSerialPortInfo::availablePorts()) {
         qDebug() << "Name        : " << info.portName();
         qDebug() << "Description : " << info.description();
         qDebug() << "Manufacturer: " << info.manufacturer();
+        qDebug() << "SystemLocation: " << info.systemLocation();
+        sysLog(info.portName() + "\t----\t" + info.manufacturer() + ' ' + info.description());
         ui->comboBoxSerialDevice->addItem(info.portName());
     }
 
@@ -153,14 +170,16 @@ void MainWindow::init(void)
     pnd = NULL;
     context = NULL;
 
-    /*list all serial*/
-//    foreach (const QSerialPortInfo &info, QSerialPortInfo::availablePorts()) {
-//        qDebug() << "Name        : " << info.portName();
-//        qDebug() << "Description : " << info.description();
-//        qDebug() << "Manufacturer: " << info.manufacturer();
-//    }
+    sysLog("Elechouse USB NFC Demo.");
+
     /** get device list */
     refresh();
+
+    /** About dialog */
+    connect(ui->actionAbout, SIGNAL(triggered()), this, SLOT(about()));
+
+    /** App Quit */
+    connect(ui->actionExit, SIGNAL(triggered()), this, SLOT(close()));
 
     /** refresh device list */
     connect(ui->refreshButton, SIGNAL(clicked()), this, SLOT(refresh()));
@@ -211,6 +230,10 @@ void MainWindow::init(void)
     ui->outputText->setReadOnly(true);
     ui->debugInfoText->setReadOnly(true);
 
+    /** debugInfoText table size */
+//    QFontMetrics metrics(ui->debugInfoText->font());
+//    ui->debugInfoText->setTabStopWidth(6*metrics.width(' '));
+
     /** disable control panel when device is closed */
     ui->tabWidget->setEnabled(false);
 
@@ -229,6 +252,16 @@ void MainWindow::init(void)
     connect(snepServer, SIGNAL(finished()), this, SLOT(ndefPulled()));
     connect(snepServer, SIGNAL(sendNdefMessage(QString)), this, SLOT(ndefTextPulled(QString)));
 #endif
+
+#ifdef Q_OS_WIN32
+    /** Remove NDEF and CardEmulate tabs,
+     *  Windows platform does not support these functions,
+     *  because of libllcp library.
+     */
+    ui->tabWidget->removeTab(2);
+    ui->tabWidget->removeTab(1);
+#endif
+
 }
 
 
@@ -245,7 +278,7 @@ void MainWindow::openClose(void)
             nfc_exit(context);
         pnd = NULL, context = NULL;
 
-        sysLog("Device closed.");
+        sysLog(ui->comboBoxSerialDevice->currentText() + " closed.");
         ui->refreshButton->setEnabled(true);
         ui->comboBoxSerialDevice->setEnabled(true);
         ui->openCloseButton->setText("Open");
@@ -256,10 +289,13 @@ void MainWindow::openClose(void)
 
     if(ui->comboBoxSerialDevice->count()<=0){
         sysLog("ERROR: No device found.");
+        ui->openCloseButton->setEnabled(true);
         return;
     }
     if(ui->comboBoxSerialDevice->currentText().isEmpty()){
         sysLog("ERROR: Device name error");
+        ui->openCloseButton->setEnabled(true);
+        return;
     }
     QString dn="pn532_uart:";
     dn += ui->comboBoxSerialDevice->currentText();
@@ -268,8 +304,7 @@ void MainWindow::openClose(void)
 
     nfc_init(&context);
     if (context == NULL) {
-        sysLog("Unable to init libnfc");
-        sysLog("Failed");
+        sysLog("ERROR: Unable to init libnfc");
         ui->openCloseButton->setEnabled(true);
         return;
     }
@@ -277,13 +312,11 @@ void MainWindow::openClose(void)
     pnd = nfc_open(context, dn.toLocal8Bit().data());
     if (pnd == NULL) {
         sysLog("ERROR: Unable to open NFC device.");
-        sysLog("Failed");
         ui->openCloseButton->setEnabled(true);
         return;
     }
 
-    sysLog("Elechouse USB NFC Demo");
-    sysLog("Device opened.");
+    sysLog(ui->comboBoxSerialDevice->currentText() + " opened.");
 
     ui->refreshButton->setEnabled(false);
     ui->comboBoxSerialDevice->setEnabled(false);
@@ -411,7 +444,7 @@ void MainWindow::readBlock()
     MifareTag *tags = NULL;
     MifareClassicKey key={0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
     MifareClassicBlock data;
-    MifareClassicKeyType keyType;
+    MifareClassicKeyType keyType = MFC_KEY_A;
 
     int block = 0;
     int sector = 0;
@@ -511,8 +544,11 @@ void MainWindow::readBlock()
     qDebug() << "Tag number: " << i;
     if(i==0){
         sysLog("No card is in field.");
+    }else{
+        sysLog("Read block successfully.");
     }
-    freefare_free_tags (tags);
+    freefare_free_tags(tags);
+
 }
 
 /****************************************************************************/
@@ -696,13 +732,13 @@ void MainWindow :: wbRead(sectorData_t *sector)
 
     if(!tags){
         sysLog("No card is in field.");
-        wbDialog->recieveWrite(false);
+        wbDialog->recieveRead(NULL, false);
         return;
     }
 
     if(!tags[0]){
         sysLog("No card is in field.");
-        wbDialog->recieveWrite(false);
+        wbDialog->recieveRead(NULL, false);
         return;
     }
 
@@ -745,7 +781,6 @@ void MainWindow :: wbRead(sectorData_t *sector)
                         *blockData->blockControl = block3.left(8);
                         block3.remove(0, 8);
                         *blockData->blockKeyB = block3.left(12);
-                        //qDebug() <<
                     }
                 }
                 if( 0 != blockData->blockMap){
@@ -785,7 +820,7 @@ void MainWindow :: resetBlock()
         0xFF, 0x07, 0x80, 0x69,
         0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF
     };
-    MifareClassicKeyType keyType;
+    MifareClassicKeyType keyType = MFC_KEY_A;
 
     memset(data, 0, sizeof(MifareClassicBlock));
 
@@ -812,18 +847,30 @@ void MainWindow :: resetBlock()
         keyType = MFC_KEY_B;
     }
 
+    ui->openCloseButton->setEnabled(false);
+    ui->readIDButton->setEnabled(false);
+    ui->readBlockButton->setEnabled(false);
+    ui->writeBlockStartButton->setEnabled(false);
+
     tags = freefare_get_tags(pnd);
 
     if(!tags){
         sysLog("No card is in field.");
+        ui->openCloseButton->setEnabled(true);
+        ui->readIDButton->setEnabled(true);
+        ui->readBlockButton->setEnabled(true);
+        ui->writeBlockStartButton->setEnabled(true);
         return;
     }
 
     if(!tags[0]){
         sysLog("No card is in field.");
+        ui->openCloseButton->setEnabled(true);
+        ui->readIDButton->setEnabled(true);
+        ui->readBlockButton->setEnabled(true);
+        ui->writeBlockStartButton->setEnabled(true);
         return;
     }
-
 
     if(freefare_get_tag_type(tags[0]) == CLASSIC_1K){
         if( 0 == mifare_classic_connect(tags[0]) ){
@@ -859,8 +906,14 @@ void MainWindow :: resetBlock()
         }
     }else{
         sysLog("Not a Classic 1K card.");
-        return;
     }
+
+    ui->openCloseButton->setEnabled(true);
+    ui->readIDButton->setEnabled(true);
+    ui->readBlockButton->setEnabled(true);
+    ui->writeBlockStartButton->setEnabled(true);
+
+    QMessageBox::information(this, "Mifare Card Erase", "Factroy Erase Done." );
 }
 
 /****************************************************************************/
@@ -871,14 +924,28 @@ void MainWindow :: readIdInit()
         return;
     }
 
-    sysLog(ui->readIDButton->text());
-
     if(ui->readIDButton->text() == "Stop"){
+        sysLog("Stop read ID.");
+
+        /** Enable buttons */
+        ui->openCloseButton->setEnabled(true);
+        ui->readBlockButton->setEnabled(true);
+        ui->writeBlockStartButton->setEnabled(true);
+        ui->resetBlockButton->setEnabled(true);
+
         t->stop();
         disconnect(this, SLOT(readId()));
         delete t;
         ui->readIDButton->setText("ReadID");
     }else{
+        sysLog("Start read ID.");
+
+        /** Enable buttons */
+        ui->openCloseButton->setEnabled(false);
+        ui->readBlockButton->setEnabled(false);
+        ui->writeBlockStartButton->setEnabled(false);
+        ui->resetBlockButton->setEnabled(false);
+
         t = new QTimer(this);
         connect(t, SIGNAL(timeout()), this, SLOT(readId()));
         t->start(1000);
@@ -1024,7 +1091,7 @@ void MainWindow::readId()
     for(int nmCnt=0; nmCnt<8; nmCnt++){
         if ((res = nfc_initiator_list_passive_targets(pnd, nmMods[nmCnt], &nt, 1)) < 0) {
             nfc_perror(pnd, "nfc_initiator_poll_target");
-            sysLog("Poll Target Timeout.");
+            qDebug() << "Poll Target Timeout.";
             oldTag.clear();
             continue;
         }
@@ -1035,7 +1102,7 @@ void MainWindow::readId()
                 return ;
             }
 
-            sysLog("Target Found.");
+            qDebug() <<"Target Found.";
             if(ui->checkBoxVerbos->isChecked()){
                 char *s;
                 str_nfc_target(&s, &nt, true);
@@ -1059,6 +1126,7 @@ void MainWindow::readId()
             }
             //sysLog("No target found.");
         }
+        QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
     }
     return;
 

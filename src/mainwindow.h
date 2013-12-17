@@ -12,6 +12,8 @@
 #include "snepServer.h"
 #endif
 
+#define GNFC_VERSION        "0.1.1"
+
 namespace Ui {
 class MainWindow;
 }
@@ -51,6 +53,9 @@ private slots:
 
     /** clear all data  */
     void resetBlock();
+
+    /** About */
+    void about(void);
 
 #ifdef Q_OS_LINUX
     /** ndef */

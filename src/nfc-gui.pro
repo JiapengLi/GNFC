@@ -37,3 +37,8 @@ win32 {
     LIBS += -L"C:\libnfc\lib" -L"C:\libfreefare\lib"
     LIBS += -lnfc -lfreefare
 }
+
+#GIT_VERSION = $$system($$quote(git describe))
+#GIT_TIMESTAMP = $$system($$quote(git log -n 1 --format=format:"%at"))
+
+#QMAKE_SUBSTITUTES += $$PWD/version.h.in

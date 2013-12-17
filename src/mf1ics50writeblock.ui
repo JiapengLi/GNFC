@@ -51,7 +51,7 @@
     </widget>
    </item>
    <item row="1" column="6">
-    <widget class="QCheckBox" name="checkBoxBlock2">
+    <widget class="QCheckBox" name="checkBoxBlock1">
      <property name="text">
       <string>Block 1</string>
      </property>
@@ -65,7 +65,7 @@
     </widget>
    </item>
    <item row="2" column="6">
-    <widget class="QCheckBox" name="checkBoxBlock1">
+    <widget class="QCheckBox" name="checkBoxBlock2">
      <property name="text">
       <string>Block 2</string>
      </property>
