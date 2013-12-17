@@ -208,7 +208,7 @@
              <enum>Qt::RightToLeft</enum>
             </property>
             <property name="text">
-             <string>VERBOS</string>
+             <string>VERBOSE</string>
             </property>
            </widget>
           </item>
