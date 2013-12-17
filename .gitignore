@@ -1,0 +1,5 @@
+bak
+build*
+release
+*.patch
+*.pro.user
