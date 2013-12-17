@@ -50,7 +50,7 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
     wbDialog = new mf1ics50WriteBlock(this);
-    this->setWindowTitle("GNFC");
+    this->setWindowTitle("GNFC - " GNFC_VERSION);
     init();
 }
 
@@ -208,11 +208,11 @@ void MainWindow::init(void)
     connect(ui->readBlockButton, SIGNAL(clicked()), this, SLOT(readBlock()));
 
     /** password configure */
-    connect(ui->enableSetPassWordButton, SIGNAL(toggled(bool)), this, SLOT(passwdSetConfig()));
+//    connect(ui->enableSetPassWordButton, SIGNAL(toggled(bool)), this, SLOT(passwdSetConfig()));
     connect(ui->keyARB, SIGNAL(toggled(bool)), this, SLOT(passwdSelect()));
     connect(ui->keyBRB, SIGNAL(toggled(bool)), this, SLOT(passwdSelect()));
     connect(ui->keyHideCheckBox, SIGNAL(toggled(bool)), this, SLOT(passwdHide()));
-    connect(ui->setPassWordButton, SIGNAL(clicked()), this, SLOT(passwdSet()));
+//    connect(ui->setPassWordButton, SIGNAL(clicked()), this, SLOT(passwdSet()));
 
     /** Write Block */
     connect(ui->writeBlockStartButton, SIGNAL(clicked()), this, SLOT(writeBlock()));
@@ -558,7 +558,7 @@ void MainWindow :: passwdInit()
     QRegExp rx("[a-fA-F0-9]{,12}");
     ui->keyALineEdit->setValidator (new QRegExpValidator (rx, this));
     ui->keyBLineEdit->setValidator (new QRegExpValidator (rx, this));
-    ui->confirmLineEdit->setValidator (new QRegExpValidator (rx, this));
+//    ui->confirmLineEdit->setValidator (new QRegExpValidator (rx, this));
 }
 
 void MainWindow :: passwdSelect()
@@ -577,30 +577,30 @@ void MainWindow :: passwdHide()
     if(ui->keyHideCheckBox->isChecked()){
         ui->keyALineEdit->setEchoMode(QLineEdit::Password);
         ui->keyBLineEdit->setEchoMode(QLineEdit::Password);
-        ui->confirmLineEdit->setEchoMode(QLineEdit::Password);
+//        ui->confirmLineEdit->setEchoMode(QLineEdit::Password);
     }else{
         ui->keyALineEdit->setEchoMode(QLineEdit::Normal);
         ui->keyBLineEdit->setEchoMode(QLineEdit::Normal);
-        ui->confirmLineEdit->setEchoMode(QLineEdit::Normal);
+//        ui->confirmLineEdit->setEchoMode(QLineEdit::Normal);
     }
 
 }
 
 void MainWindow :: passwdSetConfig()
 {
-    if(ui->enableSetPassWordButton->isChecked()){
-        /** clear keyA and keyB */
+//    if(ui->enableSetPassWordButton->isChecked()){
+//        /** clear keyA and keyB */
 
-        /** enable widgets */
-        ui->confirmLineEdit->setEnabled(true);
-        ui->setPassWordButton->setEnabled(true);
-    }else{
-        /** restore keyA and keyB */
+//        /** enable widgets */
+//        ui->confirmLineEdit->setEnabled(true);
+//        ui->setPassWordButton->setEnabled(true);
+//    }else{
+//        /** restore keyA and keyB */
 
-        /** disable widgets*/
-        ui->confirmLineEdit->setEnabled(false);
-        ui->setPassWordButton->setEnabled(false);
-    }
+//        /** disable widgets*/
+//        ui->confirmLineEdit->setEnabled(false);
+//        ui->setPassWordButton->setEnabled(false);
+//    }
 
 }
 

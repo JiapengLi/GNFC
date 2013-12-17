@@ -38,7 +38,7 @@ win32 {
     LIBS += -lnfc -lfreefare
 }
 
+#Version Control
 #GIT_VERSION = $$system($$quote(git describe))
 #GIT_TIMESTAMP = $$system($$quote(git log -n 1 --format=format:"%at"))
-
 #QMAKE_SUBSTITUTES += $$PWD/version.h.in
