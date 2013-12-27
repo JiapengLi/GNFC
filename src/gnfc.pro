@@ -4,7 +4,7 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 QT += serialport
 
-TARGET = nfc-gui
+TARGET = gnfc
 TEMPLATE = app
 
 SOURCES += main.cpp\
@@ -29,7 +29,7 @@ FORMS    += mainwindow.ui \
     mf1ics50writeblock.ui
 
 !win32{
-    LIBS += -lnfc -lfreefare -lnfc-llcp -lndef
+    LIBS += -lnfc -lfreefare -lllcp -lndef
 }
 
 win32 {

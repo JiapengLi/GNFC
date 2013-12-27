@@ -14,7 +14,7 @@
 
 #include "freefare.h"
 
-#if Q_OS_LINUX
+#ifdef Q_OS_LINUX
 #include "nfc/mac.h"
 #include "nfc/llcp.h"
 #include "nfc/llc_link.h"
@@ -139,7 +139,11 @@ void MainWindow::refresh()
 void MainWindow::beep(void)
 {
     if(ui->checkBoxBeep->isChecked()){
-        pn532ExCmd->beep(pnd);
+        if(ui->rbUART->isChecked()){
+            pn532ExCmd->beep(pnd);
+        }else if(ui->rbNET->isChecked()){
+            /* fix me: net device beep function */
+        }
     }
     sleep(1);
 }
@@ -253,6 +257,11 @@ void MainWindow::init(void)
     connect(snepServer, SIGNAL(sendNdefMessage(QString)), this, SLOT(ndefTextPulled(QString)));
 #endif
 
+    /** device select */
+    ui->lineEditIP->setEnabled(false);
+    ui->lineEditPort->setEnabled(false);
+    connect(ui->rbNET, SIGNAL(toggled(bool)), this, SLOT(deviceSelect()));
+
 #ifdef Q_OS_WIN32
     /** Remove NDEF and CardEmulate tabs,
      *  Windows platform does not support these functions,
@@ -264,10 +273,26 @@ void MainWindow::init(void)
 
 }
 
+void MainWindow :: deviceSelect(void)
+{
+    if(ui->rbNET->isChecked()){
+        ui->lineEditIP->setEnabled(true);
+        ui->lineEditPort->setEnabled(true);
+        ui->comboBoxSerialDevice->setEnabled(false);
+        ui->refreshButton->setEnabled(false);
+    }else if (ui->rbUART->isChecked()){
+        ui->lineEditIP->setEnabled(false);
+        ui->lineEditPort->setEnabled(false);
+        ui->comboBoxSerialDevice->setEnabled(true);
+        ui->refreshButton->setEnabled(true);
+    }
+}
 
 void MainWindow::openClose(void)
 {
     ui->openCloseButton->setEnabled(false);
+    ui->rbNET->setEnabled(false);
+    ui->rbUART->setEnabled(false);
 
     if(ui->openCloseButton->text() == "Close"){
 
@@ -278,29 +303,46 @@ void MainWindow::openClose(void)
             nfc_exit(context);
         pnd = NULL, context = NULL;
 
-        sysLog(ui->comboBoxSerialDevice->currentText() + " closed.");
-        ui->refreshButton->setEnabled(true);
-        ui->comboBoxSerialDevice->setEnabled(true);
+        if(ui->rbUART->isChecked()){
+            /** print log info, enable uart device */
+            sysLog(ui->comboBoxSerialDevice->currentText() + " closed.");
+            ui->refreshButton->setEnabled(true);
+            ui->comboBoxSerialDevice->setEnabled(true);
+        }else if(ui->rbNET->isChecked()){
+            ui->lineEditIP->setEnabled(true);
+            ui->lineEditPort->setEnabled(true);
+        }
+
+        ui->rbNET->setEnabled(true);
+        ui->rbUART->setEnabled(true);
         ui->openCloseButton->setText("Open");
         ui->openCloseButton->setEnabled(true);
         ui->tabWidget->setEnabled(false);
         return;
     }
 
-    if(ui->comboBoxSerialDevice->count()<=0){
-        sysLog("ERROR: No device found.");
-        ui->openCloseButton->setEnabled(true);
-        return;
-    }
-    if(ui->comboBoxSerialDevice->currentText().isEmpty()){
-        sysLog("ERROR: Device name error");
-        ui->openCloseButton->setEnabled(true);
-        return;
-    }
-    QString dn="pn532_uart:";
-    dn += ui->comboBoxSerialDevice->currentText();
+    QString dn;
+    if(ui->rbUART->isChecked()){
+        if(ui->comboBoxSerialDevice->count()<=0){
+            sysLog("ERROR: No device found.");
+            ui->openCloseButton->setEnabled(true);
+            return;
+        }
+        if(ui->comboBoxSerialDevice->currentText().isEmpty()){
+            sysLog("ERROR: Device name error");
+            ui->openCloseButton->setEnabled(true);
+            return;
+        }
 
-    qDebug() << dn;
+        /** choose uart device */
+        dn = "pn532_uart:";
+        dn += ui->comboBoxSerialDevice->currentText();
+        qDebug() << dn;
+    }else if(ui->rbNET->isChecked()){
+        /* fix me: check text format */
+        dn = "pn532_net:";
+        dn += ui->lineEditIP->text() + ":" + ui->lineEditPort->text();
+    }
 
     nfc_init(&context);
     if (context == NULL) {
@@ -316,10 +358,16 @@ void MainWindow::openClose(void)
         return;
     }
 
-    sysLog(ui->comboBoxSerialDevice->currentText() + " opened.");
+    if(ui->rbUART->isChecked()){
+        /** print log info, diable uart widgets */
+        sysLog(ui->comboBoxSerialDevice->currentText() + " opened.");
+        ui->refreshButton->setEnabled(false);
+        ui->comboBoxSerialDevice->setEnabled(false);
+    }else if(ui->rbNET->isChecked()){
+        ui->lineEditIP->setEnabled(true);
+        ui->lineEditPort->setEnabled(true);
+    }
 
-    ui->refreshButton->setEnabled(false);
-    ui->comboBoxSerialDevice->setEnabled(false);
     ui->openCloseButton->setText("Close");
     ui->openCloseButton->setEnabled(true);
     ui->tabWidget->setEnabled(true);
