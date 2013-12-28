@@ -28,3 +28,7 @@ Source code. [Download](https://github.com/JiapengLi/GNFC/archive/v0.2.0.zip)
 
 ## DOC
 [HOWTO](./doc/HOWTO.md)
+
+
+[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/JiapengLi/gnfc/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
+
