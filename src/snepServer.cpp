@@ -165,6 +165,8 @@ void *snepServerThread ::snepService(void *arg)
     }
     printf("len: %d\n", len);
 
+    qDebug() << "sencond recv quit.";
+
     // TODO Stop the LLCP when this is reached
     llc_connection_stop(connection);\
 
@@ -223,7 +225,7 @@ void snepServerThread :: decodeNDEFMessage (const QByteArray data, int depth)
                     else if (type_name == QString("U"))
                     {
                         qDebug() << prefix << "NDEF record (" << i << ") payload (uri): " << NDEFRecord::uriProtocol (record.payload()) << record.payload().mid(1) << endl;
-                        pl.append(NDEFRecord::uriProtocol (record.payload()) + record.payload());
+                        pl.append(NDEFRecord::uriProtocol (record.payload()) + record.payload().mid(1));
                     }
                     else if ((depth > 0) && (type_name == QString("act")))
                     {

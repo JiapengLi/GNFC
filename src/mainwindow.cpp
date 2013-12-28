@@ -14,7 +14,6 @@
 
 #include "freefare.h"
 
-#ifdef Q_OS_LINUX
 #include "nfc/mac.h"
 #include "nfc/llcp.h"
 #include "nfc/llc_link.h"
@@ -26,7 +25,6 @@
 #include "ndef/ndefrecord.h"
 #include "ndef/ndefrecordtype.h"
 #include "ndef/tlv.h"
-#endif /** Q_OS_LINUX */
 
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
@@ -42,11 +40,7 @@ void sleep(unsigned int msec)
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-#ifdef Q_OS_WIN32
-    ui(new Ui::MainWindow)
-#else /** Q_OS_WIN32 */
     ui(new Ui::MainWindow), snepClient(new snepClientThread), snepServer(new snepServerThread)
-#endif /** Q_OS_WIN32 */
 {
     ui->setupUi(this);
     wbDialog = new mf1ics50WriteBlock(this);
@@ -67,10 +61,8 @@ MainWindow::~MainWindow()
 
     delete wbDialog;
 
-#ifdef Q_OS_LINUX
     delete snepClient;
     delete snepServer;
-#endif
 
     delete ui;
 }
@@ -248,29 +240,19 @@ void MainWindow::init(void)
 
     passwdInit();
 
-#ifdef Q_OS_LINUX
     /** NDEF */
     connect(ui->ndefPush, SIGNAL(clicked()), this, SLOT(ndefPush()));
     connect(snepClient, SIGNAL(finished()), this, SLOT(ndefPushed()));
     connect(ui->ndefPull, SIGNAL(clicked()), this, SLOT(ndefPull()));
     connect(snepServer, SIGNAL(finished()), this, SLOT(ndefPulled()));
     connect(snepServer, SIGNAL(sendNdefMessage(QString)), this, SLOT(ndefTextPulled(QString)));
-#endif
 
     /** device select */
     ui->lineEditIP->setEnabled(false);
     ui->lineEditPort->setEnabled(false);
     connect(ui->rbNET, SIGNAL(toggled(bool)), this, SLOT(deviceSelect()));
 
-#ifdef Q_OS_WIN32
-    /** Remove NDEF and CardEmulate tabs,
-     *  Windows platform does not support these functions,
-     *  because of libllcp library.
-     */
     ui->tabWidget->removeTab(2);
-    ui->tabWidget->removeTab(1);
-#endif
-
 }
 
 void MainWindow :: deviceSelect(void)
@@ -412,7 +394,6 @@ void MainWindow :: test()
     qDebug() << "Index: " << ui->sectorComboBox->currentIndex();
 }
 
-#ifdef Q_OS_LINUX
 void MainWindow :: ndefPush(void)
 {
     ui->ndefPush->setEnabled(false);
@@ -456,7 +437,6 @@ void MainWindow :: ndefTextPulled(QString str)
     }
     ui->pullText->setText(str);
 }
-#endif /** Q_OS_LINUX */
 
 void MainWindow :: sysLog(QString str)
 {

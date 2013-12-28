@@ -19,6 +19,12 @@
 #include <ndef/ndefrecord.h>
 #include <ndef/tlv.h>
 
+#ifdef WIN32
+#include <winsock2.h>
+#include <windows.h>
+#define be32toh(x) ntohl(x)
+#endif
+
 class snepServerThread : public QThread{
     Q_OBJECT
 
