@@ -4,14 +4,14 @@ GNFC is an OpenSource GUI NFC tool, it is based on QT and several nfc libraries(
 
 ## Supported Devices
 
-### [Elechosue USB NFC Device](http://elechouse.com)
+### [Elechouse USB NFC Device](http://elechouse.com)
 
 [ELECHOUSE USB NFC Device]() is based on PN532, with an MCU and a beeper inside, the beeper can be controlled by sending command(in PN532 frame format) to it, the command value to control beeper is **0xA0**, after receive the `BEEP` command [ELECHOUSE USB NFC Device](http://elechouse.com) won't send ack package.
 
-### [Elechosue WIFI NFC Device](http://elechouse.com) 
+### [Elechouse WIFI NFC Device](http://elechouse.com) 
 It is an OpenWrt based device, with a pn532 module in it. It is supported by pn532_net driver, pn532_net driver is at [JiapengLi/libnfc](https://github.com/JiapengLi/libnfc)
 
-[Elechosue WIFI NFC Device]() 
+[Elechouse WIFI NFC Device]() 
 
 ## Dependence
 
