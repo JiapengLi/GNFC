@@ -3,3 +3,6 @@
 + Add support to MiFare s70
 + MiFare NDEF Support
 + NDEF Card Emulator
++ vCard
++ Be kind to user, limit operation(lock tabs, lock ndef push&pull)
++ push/pull cycle
