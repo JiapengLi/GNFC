@@ -2,7 +2,7 @@ QT       += core gui
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-QT += serialport
+QT += serialport network
 
 TARGET = gnfc
 TEMPLATE = app
@@ -10,14 +10,16 @@ TEMPLATE = app
 SOURCES += main.cpp\
         mainwindow.cpp \
     pn532_extend_cmd.cpp \
-    mf1ics50writeblock.cpp 
+    mf1ics50writeblock.cpp \ 
+    ewin_beep.cpp
 SOURCES += snepClient.cpp \
     snepServer.cpp
 
 
 HEADERS  += mainwindow.h \
     pn532_extend_cmd.h \
-    mf1ics50writeblock.h 
+    mf1ics50writeblock.h \ 
+    ewin_beep.h
 HEADERS += snepClient.h \
     snepServer.h
 

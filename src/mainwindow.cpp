@@ -8,6 +8,7 @@
 #include <QRegExp>
 #include <QTime>
 #include <QMessageBox>
+#include <QHostAddress>
 
 #include "nfc/nfc.h"
 #include "nfc/nfc-emulation.h"
@@ -45,6 +46,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
     wbDialog = new mf1ics50WriteBlock(this);
     this->setWindowTitle("GNFC - " GNFC_VERSION);
+    ewinBeep = new ewin_beep;
+
     init();
 }
 
@@ -63,6 +66,8 @@ MainWindow::~MainWindow()
 
     delete snepClient;
     delete snepServer;
+
+    delete ewinBeep;
 
     delete ui;
 }
@@ -135,6 +140,7 @@ void MainWindow::beep(void)
             pn532ExCmd->beep(pnd);
         }else if(ui->rbNET->isChecked()){
             /* fix me: net device beep function */
+            ewinBeep->beep();
         }
     }
     sleep(1);
@@ -324,6 +330,16 @@ void MainWindow::openClose(void)
         /* fix me: check text format */
         dn = "pn532_net:";
         dn += ui->lineEditIP->text() + ":" + ui->lineEditPort->text();
+
+        /** connect to beep port */
+        QHostAddress ip_test;
+        ip_test.setAddress("192.168.1.1");
+        ewinBeep->connectToHost(ip_test,8001);
+        if (ewinBeep->waitForConnected(1000)){
+             qDebug("Beep port is Connected!");
+        }else{
+             qDebug("Beep port is Unconnected!");
+        }
     }
 
     nfc_init(&context);

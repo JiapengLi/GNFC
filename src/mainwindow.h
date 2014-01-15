@@ -11,6 +11,8 @@
 #include "snepClient.h"
 #include "snepServer.h"
 
+#include "ewin_beep.h"
+
 #define GNFC_VERSION        "0.2.0"
 
 namespace Ui {
@@ -93,7 +95,7 @@ private:
     nfc_context *context;
 
     pn532_extend_cmd *pn532ExCmd;
-
+    ewin_beep *ewinBeep;
     QTimer *t;
 
     QByteArray oldTag, newTag;
