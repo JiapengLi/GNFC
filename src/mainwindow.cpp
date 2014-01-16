@@ -297,12 +297,15 @@ void MainWindow::openClose(void)
             ui->refreshButton->setEnabled(true);
             ui->comboBoxSerialDevice->setEnabled(true);
         }else if(ui->rbNET->isChecked()){
+            ewinBeep->disconnectFromHost();
             ui->lineEditIP->setEnabled(true);
             ui->lineEditPort->setEnabled(true);
         }
 
+
         ui->rbNET->setEnabled(true);
         ui->rbUART->setEnabled(true);
+
         ui->openCloseButton->setText("Open");
         ui->openCloseButton->setEnabled(true);
         ui->tabWidget->setEnabled(false);
@@ -333,7 +336,7 @@ void MainWindow::openClose(void)
 
         /** connect to beep port */
         QHostAddress ip_test;
-        ip_test.setAddress("192.168.1.1");
+        ip_test.setAddress(ui->lineEditIP->text());
         ewinBeep->connectToHost(ip_test,8001);
         if (ewinBeep->waitForConnected(1000)){
              qDebug("Beep port is Connected!");
@@ -346,6 +349,8 @@ void MainWindow::openClose(void)
     if (context == NULL) {
         sysLog("ERROR: Unable to init libnfc");
         ui->openCloseButton->setEnabled(true);
+        ui->rbNET->setEnabled(true);
+        ui->rbUART->setEnabled(true);
         return;
     }
 
@@ -353,6 +358,8 @@ void MainWindow::openClose(void)
     if (pnd == NULL) {
         sysLog("ERROR: Unable to open NFC device.");
         ui->openCloseButton->setEnabled(true);
+        ui->rbNET->setEnabled(true);
+        ui->rbUART->setEnabled(true);
         return;
     }
 
